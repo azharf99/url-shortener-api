@@ -41,17 +41,21 @@ func (u *urlUsecase) Shorten(ctx context.Context, userID uint, originalURL strin
 
 	return url, nil
 }
-
 func (u *urlUsecase) GetOriginalURL(ctx context.Context, shortCode string) (string, error) {
 	url, err := u.urlRepo.GetByShortCode(ctx, shortCode)
 	if err != nil {
 		return "", err
 	}
 	if url == nil {
-		return "", errors.New("URL not found")
+		return "", errors.New("url not found")
 	}
+
+	// Increment click count (fire and forget for performance, or handle error)
+	_ = u.urlRepo.IncrementClick(ctx, shortCode)
+
 	return url.OriginalURL, nil
 }
+
 
 func (u *urlUsecase) UpdateURL(ctx context.Context, userID uint, role domain.Role, urlID uint, originalURL string) error {
 	url, err := u.urlRepo.GetByID(ctx, urlID)

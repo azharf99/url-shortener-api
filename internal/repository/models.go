@@ -25,6 +25,7 @@ type URLModel struct {
 	OriginalURL string `gorm:"not null"`
 	ShortCode   string `gorm:"unique;not null"`
 	UserID      uint   `gorm:"not null"`
+	Clicks      int64  `gorm:"default:0"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -73,6 +74,7 @@ func ToURLEntity(m *URLModel) *domain.URL {
 		OriginalURL: m.OriginalURL,
 		ShortCode:   m.ShortCode,
 		UserID:      m.UserID,
+		Clicks:      m.Clicks,
 		CreatedAt:   m.CreatedAt,
 		UpdatedAt:   m.UpdatedAt,
 	}
@@ -87,6 +89,7 @@ func FromURLEntity(e *domain.URL) *URLModel {
 		OriginalURL: e.OriginalURL,
 		ShortCode:   e.ShortCode,
 		UserID:      e.UserID,
+		Clicks:      e.Clicks,
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
 	}

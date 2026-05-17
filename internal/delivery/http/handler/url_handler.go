@@ -16,6 +16,7 @@ type URLResponse struct {
 	ShortCode   string    `json:"short_code"`
 	ShortURL    string    `json:"short_url"`
 	UserID      uint      `json:"user_id"`
+	Clicks      int64     `json:"clicks"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -23,7 +24,7 @@ type URLResponse struct {
 func NewURLResponse(u domain.URL) URLResponse {
 	backendURL := os.Getenv("BACKEND_URL")
 	if backendURL == "" {
-		backendURL = "http://localhost:8088/"
+		backendURL = "http://localhost:8080/"
 	}
 	return URLResponse{
 		ID:          u.ID,
@@ -31,10 +32,12 @@ func NewURLResponse(u domain.URL) URLResponse {
 		ShortCode:   u.ShortCode,
 		ShortURL:    backendURL + u.ShortCode,
 		UserID:      u.UserID,
+		Clicks:      u.Clicks,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
 	}
 }
+
 
 type URLHandler struct {
 	urlUsecase domain.URLUsecase

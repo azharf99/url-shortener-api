@@ -10,6 +10,7 @@ type URL struct {
 	OriginalURL string
 	ShortCode   string
 	UserID      uint
+	Clicks      int64
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -22,6 +23,7 @@ type URLRepository interface {
 	Delete(ctx context.Context, id uint) error
 	ListByUserID(ctx context.Context, userID uint) ([]URL, error)
 	ListAll(ctx context.Context) ([]URL, error)
+	IncrementClick(ctx context.Context, shortCode string) error
 }
 
 type URLUsecase interface {

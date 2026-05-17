@@ -87,3 +87,9 @@ func (r *urlRepository) ListAll(ctx context.Context) ([]domain.URL, error) {
 	}
 	return urls, nil
 }
+
+func (r *urlRepository) IncrementClick(ctx context.Context, shortCode string) error {
+	return r.db.WithContext(ctx).Model(&URLModel{}).
+		Where("short_code = ?", shortCode).
+		Update("clicks", gorm.Expr("clicks + ?", 1)).Error
+}
