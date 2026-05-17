@@ -5,7 +5,6 @@ WORKDIR /app
 
 # Install build dependencies
 RUN apk add --no-cache git
-RUN apk add --no-cache tzdata
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -21,6 +20,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api/main.go
 
 # Final stage
 FROM alpine:latest
+
+# Install tzdata for timezone support
+RUN apk add --no-cache tzdata
 
 WORKDIR /app
 
