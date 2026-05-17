@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
 	"gorm.io/gorm"
@@ -23,15 +24,21 @@ func (r *userRepository) GetByID(ctx context.Context, id uint) (*domain.User, er
 	var user domain.User
 	err := r.db.WithContext(ctx).First(&user, id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *userRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+func (r *userRepository) GetByUsernameOrEmail(ctx context.Context, identifier string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+	err := r.db.WithContext(ctx).Where("username = ? OR email = ?", identifier, identifier).First(&user).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &user, nil

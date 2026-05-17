@@ -33,8 +33,11 @@ func (u *userUsecase) Register(ctx context.Context, username, email, password st
 }
 
 func (u *userUsecase) Login(ctx context.Context, username, password string) (string, error) {
-	user, err := u.userRepo.GetByUsername(ctx, username)
+	user, err := u.userRepo.GetByUsernameOrEmail(ctx, username)
 	if err != nil {
+		return "", err
+	}
+	if user == nil {
 		return "", errors.New("invalid credentials")
 	}
 

@@ -25,7 +25,7 @@ type User struct {
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByID(ctx context.Context, id uint) (*User, error)
-	GetByUsername(ctx context.Context, username string) (*User, error)
+	GetByUsernameOrEmail(ctx context.Context, identifier string) (*User, error)
 }
 
 type UserUsecase interface {

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
 	"gorm.io/gorm"
@@ -23,6 +24,9 @@ func (r *urlRepository) GetByShortCode(ctx context.Context, shortCode string) (*
 	var url domain.URL
 	err := r.db.WithContext(ctx).Where("short_code = ?", shortCode).First(&url).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &url, nil
@@ -32,6 +36,9 @@ func (r *urlRepository) GetByID(ctx context.Context, id uint) (*domain.URL, erro
 	var url domain.URL
 	err := r.db.WithContext(ctx).First(&url, id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &url, nil

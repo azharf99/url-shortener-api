@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func ConnectDB() *gorm.DB {
@@ -27,7 +28,9 @@ func ConnectDB() *gorm.DB {
 		os.Getenv("DB_PORT"),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Warn), // Only log warnings and errors, ignore RecordNotFound (which is logged at Info level if IgnoreRecordNotFoundError is true)
+	})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}

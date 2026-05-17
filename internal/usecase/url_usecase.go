@@ -52,6 +52,9 @@ func (u *urlUsecase) GetOriginalURL(ctx context.Context, shortCode string) (stri
 	if err != nil {
 		return "", err
 	}
+	if url == nil {
+		return "", errors.New("URL not found")
+	}
 	return url.OriginalURL, nil
 }
 
@@ -59,6 +62,9 @@ func (u *urlUsecase) UpdateURL(ctx context.Context, userID uint, role domain.Rol
 	url, err := u.urlRepo.GetByID(ctx, urlID)
 	if err != nil {
 		return err
+	}
+	if url == nil {
+		return errors.New("URL not found")
 	}
 
 	if role != domain.RoleAdmin && url.UserID != userID {
@@ -73,6 +79,9 @@ func (u *urlUsecase) DeleteURL(ctx context.Context, userID uint, role domain.Rol
 	url, err := u.urlRepo.GetByID(ctx, urlID)
 	if err != nil {
 		return err
+	}
+	if url == nil {
+		return errors.New("URL not found")
 	}
 
 	if role != domain.RoleAdmin && url.UserID != userID {
