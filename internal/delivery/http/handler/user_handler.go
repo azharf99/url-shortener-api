@@ -50,6 +50,10 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	if err := h.userUsecase.Register(c.Request.Context(), input.Username, input.Email, input.Password); err != nil {
+		if err.Error() == "username already taken" || err.Error() == "email already registered" {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not register user"})
 		return
 	}
@@ -112,6 +116,10 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.userUsecase.AdminCreateUser(c.Request.Context(), input.Username, input.Email, input.Password, input.Role); err != nil {
+		if err.Error() == "username already taken" || err.Error() == "email already registered" {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -188,6 +196,10 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.userUsecase.UpdateUser(c.Request.Context(), params.ID, input.Username, input.Email, input.Role); err != nil {
+		if err.Error() == "username already taken" || err.Error() == "email already registered" {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

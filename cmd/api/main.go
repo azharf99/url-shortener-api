@@ -15,6 +15,7 @@ import (
 
 func main() {
 	db := config.ConnectDB()
+	redisClient := config.ConnectRedis()
 
 	// Repositories
 	urlRepo := repository.NewURLRepository(db)
@@ -30,8 +31,8 @@ func main() {
 
 	r := gin.Default()
 
-	// Rate Limiter
-	r.Use(middleware.RateLimiter())
+	// Rate Limiter (using Redis if available)
+	r.Use(middleware.RateLimiter(redisClient))
 
 	// CORS
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")

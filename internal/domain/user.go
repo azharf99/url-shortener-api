@@ -26,6 +26,8 @@ type User struct {
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByID(ctx context.Context, id uint) (*User, error)
+	GetByUsername(ctx context.Context, username string) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByUsernameOrEmail(ctx context.Context, identifier string) (*User, error)
 	GetByGoogleID(ctx context.Context, googleID string) (*User, error)
 	List(ctx context.Context, search string, offset, limit int) ([]User, int64, error)

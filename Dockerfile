@@ -29,9 +29,6 @@ WORKDIR /app
 # Copy the binary from the builder stage
 COPY --from=builder /app/main .
 
-# Copy .env file if it exists (optional, usually handled by docker-compose)
-# COPY .env .
-
 EXPOSE 8080
 
 CMD ["./main"]

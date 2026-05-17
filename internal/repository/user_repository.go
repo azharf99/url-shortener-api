@@ -39,6 +39,30 @@ func (r *userRepository) GetByID(ctx context.Context, id uint) (*domain.User, er
 	return ToUserEntity(&model), nil
 }
 
+func (r *userRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+	var model UserModel
+	err := r.db.WithContext(ctx).Where("username = ?", username).First(&model).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return ToUserEntity(&model), nil
+}
+
+func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var model UserModel
+	err := r.db.WithContext(ctx).Where("email = ?", email).First(&model).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return ToUserEntity(&model), nil
+}
+
 func (r *userRepository) GetByUsernameOrEmail(ctx context.Context, identifier string) (*domain.User, error) {
 	var model UserModel
 	err := r.db.WithContext(ctx).Where("username = ? OR email = ?", identifier, identifier).First(&model).Error

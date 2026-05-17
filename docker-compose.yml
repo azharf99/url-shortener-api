@@ -31,11 +31,16 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM_NAME=${SMTP_FROM_NAME}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_ADDR=${REDIS_ADDR}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - shared-network
+      - redis_network
     ports:
       - "8088:8080"
 
 networks:
   shared-network:
+    external: true
+  redis_network:
     external: true

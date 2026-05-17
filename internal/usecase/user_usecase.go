@@ -17,6 +17,22 @@ func NewUserUsecase(userRepo domain.UserRepository) domain.UserUsecase {
 }
 
 func (u *userUsecase) Register(ctx context.Context, username, email, password string) error {
+	existingUser, err := u.userRepo.GetByUsername(ctx, username)
+	if err != nil {
+		return err
+	}
+	if existingUser != nil {
+		return errors.New("username already taken")
+	}
+
+	existingEmail, err := u.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if existingEmail != nil {
+		return errors.New("email already registered")
+	}
+
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return err
@@ -111,6 +127,22 @@ func (u *userUsecase) UpdateUser(ctx context.Context, id uint, username, email s
 		return errors.New("user not found")
 	}
 
+	// Check if new username is taken by another user
+	if username != user.Username {
+		existing, _ := u.userRepo.GetByUsername(ctx, username)
+		if existing != nil {
+			return errors.New("username already taken")
+		}
+	}
+
+	// Check if new email is taken by another user
+	if email != user.Email {
+		existing, _ := u.userRepo.GetByEmail(ctx, email)
+		if existing != nil {
+			return errors.New("email already registered")
+		}
+	}
+
 	user.Username = username
 	user.Email = email
 	user.Role = role
@@ -123,6 +155,22 @@ func (u *userUsecase) DeleteUser(ctx context.Context, id uint) error {
 }
 
 func (u *userUsecase) AdminCreateUser(ctx context.Context, username, email, password string, role domain.Role) error {
+	existingUser, err := u.userRepo.GetByUsername(ctx, username)
+	if err != nil {
+		return err
+	}
+	if existingUser != nil {
+		return errors.New("username already taken")
+	}
+
+	existingEmail, err := u.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if existingEmail != nil {
+		return errors.New("email already registered")
+	}
+
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return err
