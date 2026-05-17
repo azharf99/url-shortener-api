@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +19,11 @@ type reCAPTCHAResponse struct {
 	ErrorCodes  []string `json:"error-codes"`
 }
 
+// Global HTTP client with timeout to prevent goroutine leaks
+var captchaClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
+
 func CaptchaMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		captchaToken := c.GetHeader("X-Recaptcha-Token")
@@ -28,7 +34,7 @@ func CaptchaMiddleware() gin.HandlerFunc {
 		}
 
 		secret := os.Getenv("RECAPTCHA_SECRET")
-		resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify",
+		resp, err := captchaClient.PostForm("https://www.google.com/recaptcha/api/siteverify",
 			url.Values{"secret": {secret}, "response": {captchaToken}})
 
 		if err != nil {

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"strings"
+
 	"github.com/azharf99/url-shortener-api/internal/config"
 	"github.com/azharf99/url-shortener-api/internal/delivery/http/handler"
 	"github.com/azharf99/url-shortener-api/internal/delivery/http/middleware"
@@ -27,11 +30,20 @@ func main() {
 
 	r := gin.Default()
 
+	// Rate Limiter
+	r.Use(middleware.RateLimiter())
+
 	// CORS
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	origins := []string{"*"}
+	if allowedOrigins != "" {
+		origins = strings.Split(allowedOrigins, ",")
+	}
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Recaptcha-Token"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
