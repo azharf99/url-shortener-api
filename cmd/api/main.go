@@ -64,29 +64,29 @@ func main() {
 	
 	api := r.Group("/api")
 	{
-		api.POST("/register", userHandler.Register)
-		api.POST("/login", userHandler.Login)
-		api.POST("/google-login", userHandler.GoogleLogin)
+		api.POST("/register", middleware.CaptchaMiddleware(), userHandler.Register)
+		api.POST("/login", middleware.CaptchaMiddleware(), userHandler.Login)
+		api.POST("/google-login", middleware.CaptchaMiddleware(), userHandler.GoogleLogin)
 
-		// Protected routes
+		// Protected routes (JWT only for READ, Captcha for WRITE)
 		auth := api.Group("/")
-		auth.Use(middleware.AuthMiddleware(), middleware.CaptchaMiddleware())
+		auth.Use(middleware.AuthMiddleware())
 		{
-			auth.POST("/shorten", urlHandler.Shorten)
+			auth.POST("/shorten", middleware.CaptchaMiddleware(), urlHandler.Shorten)
 			auth.GET("/urls", urlHandler.List)
-			auth.PUT("/urls/:id", urlHandler.Update)
-			auth.DELETE("/urls/:id", urlHandler.Delete)
+			auth.PUT("/urls/:id", middleware.CaptchaMiddleware(), urlHandler.Update)
+			auth.DELETE("/urls/:id", middleware.CaptchaMiddleware(), urlHandler.Delete)
 		}
 
-		// Admin routes
+		// Admin routes (Admin + JWT for READ, + Captcha for WRITE)
 		admin := api.Group("/admin")
-		admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly(), middleware.CaptchaMiddleware())
+		admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 		{
-			admin.POST("/users", userHandler.Create)
+			admin.POST("/users", middleware.CaptchaMiddleware(), userHandler.Create)
 			admin.GET("/users", userHandler.List)
 			admin.GET("/users/:id", userHandler.GetByID)
-			admin.PUT("/users/:id", userHandler.Update)
-			admin.DELETE("/users/:id", userHandler.Delete)
+			admin.PUT("/users/:id", middleware.CaptchaMiddleware(), userHandler.Update)
+			admin.DELETE("/users/:id", middleware.CaptchaMiddleware(), userHandler.Delete)
 		}
 	}
 
