@@ -18,6 +18,7 @@ func NewUserHandler(u domain.UserUsecase) *UserHandler {
 func (h *UserHandler) Register(c *gin.Context) {
 	var input struct {
 		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required,min=6"`
 	}
 
@@ -26,7 +27,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUsecase.Register(c.Request.Context(), input.Username, input.Password); err != nil {
+	if err := h.userUsecase.Register(c.Request.Context(), input.Username, input.Email, input.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not register user"})
 		return
 	}

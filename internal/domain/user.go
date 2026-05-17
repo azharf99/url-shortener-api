@@ -15,6 +15,7 @@ const (
 type User struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Username  string    `json:"username" gorm:"unique;not null"`
+	Email     string    `json:"email" gorm:"unique;not null"`
 	Password  string    `json:"-" gorm:"not null"`
 	Role      Role      `json:"role" gorm:"type:varchar(20);default:'user'"`
 	CreatedAt time.Time `json:"created_at"`
@@ -28,6 +29,6 @@ type UserRepository interface {
 }
 
 type UserUsecase interface {
-	Register(ctx context.Context, username, password string) error
+	Register(ctx context.Context, username, email, password string) error
 	Login(ctx context.Context, username, password string) (string, error)
 }

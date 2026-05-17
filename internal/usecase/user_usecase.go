@@ -16,7 +16,7 @@ func NewUserUsecase(userRepo domain.UserRepository) domain.UserUsecase {
 	return &userUsecase{userRepo}
 }
 
-func (u *userUsecase) Register(ctx context.Context, username, password string) error {
+func (u *userUsecase) Register(ctx context.Context, username, email, password string) error {
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return err
@@ -24,6 +24,7 @@ func (u *userUsecase) Register(ctx context.Context, username, password string) e
 
 	user := &domain.User{
 		Username: username,
+		Email:    email,
 		Password: hashedPassword,
 		Role:     domain.RoleUser,
 	}
