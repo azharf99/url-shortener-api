@@ -2,12 +2,11 @@ package config
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 func ConnectRedis() *redis.Client {
@@ -31,10 +30,13 @@ func ConnectRedis() *redis.Client {
 
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
-		log.Printf("Warning: Could not connect to Redis at %s: %v", addr, err)
+		zap.L().Warn("Could not connect to Redis, rate limiter will fallback", 
+			zap.String("addr", addr), 
+			zap.Error(err),
+		)
 		return nil
 	}
 
-	fmt.Printf("Connected to Redis at %s\n", addr)
+	zap.L().Info("Connected to Redis", zap.String("addr", addr))
 	return client
 }

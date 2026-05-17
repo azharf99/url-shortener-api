@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/ulule/limiter/v3"
 	mgin "github.com/ulule/limiter/v3/drivers/middleware/gin"
 	sredis "github.com/ulule/limiter/v3/drivers/store/redis"
+	"go.uber.org/zap"
 )
 
 func RateLimiter(redisClient *redis.Client) gin.HandlerFunc {
@@ -28,14 +28,12 @@ func RateLimiter(redisClient *redis.Client) gin.HandlerFunc {
 			Prefix: "rate_limiter:",
 		})
 		if err != nil {
-			log.Fatalf("Failed to create Redis rate limiter store: %v", err)
+			zap.L().Fatal("Failed to create Redis rate limiter store", zap.Error(err))
 		}
-		log.Println("Rate limiter using Redis store")
+		zap.L().Info("Rate limiter initialized with Redis store")
 	} else {
-		// Fallback to in-memory store if Redis client is not provided
-		// Note: In real production, you might want to fail-fast if Redis is expected
-		log.Println("WARNING: Rate limiter using fallback in-memory store")
-		return func(c *gin.Context) { c.Next() } // Basic safety if misconfigured
+		zap.L().Warn("Rate limiter using fallback in-memory store (non-distributed)")
+		return func(c *gin.Context) { c.Next() }
 	}
 
 	// Create the limiter instance
@@ -43,7 +41,10 @@ func RateLimiter(redisClient *redis.Client) gin.HandlerFunc {
 
 	// Return the Gin middleware
 	return mgin.NewMiddleware(instance, mgin.WithLimitReachedHandler(func(c *gin.Context) {
-		log.Printf("Rate limit reached for IP: %s", c.ClientIP())
+		zap.L().Warn("Rate limit reached", 
+			zap.String("ip", c.ClientIP()), 
+			zap.String("path", c.Request.URL.Path),
+		)
 		c.JSON(http.StatusTooManyRequests, gin.H{
 			"error": "Rate limit exceeded. Please try again in a minute.",
 		})

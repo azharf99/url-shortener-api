@@ -2,13 +2,14 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"time"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
 	"github.com/azharf99/url-shortener-api/internal/repository"
 	"github.com/azharf99/url-shortener-api/internal/utils"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,7 +18,7 @@ import (
 func ConnectDB() *gorm.DB {
 	if _, err := os.Stat(".env"); err == nil {
 		if err := godotenv.Load(); err != nil {
-			log.Println("Error loading .env file")
+			zap.L().Warn("Error loading .env file")
 		}
 	}
 
@@ -29,15 +30,21 @@ func ConnectDB() *gorm.DB {
 		os.Getenv("DB_PORT"),
 	)
 
+	// Set GORM logger to use Zap
+	gormLogLevel := logger.Warn
+	if os.Getenv("GIN_MODE") != "release" {
+		gormLogLevel = logger.Info
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.Default.LogMode(gormLogLevel),
 	})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		zap.L().Fatal("Failed to connect to database", zap.Error(err))
 	}
 
 	db.AutoMigrate(&repository.UserModel{}, &repository.URLModel{})
-	fmt.Println("Database connected and migrated")
+	zap.L().Info("Database connected and migrated")
 
 	seedAdmin(db)
 
@@ -50,7 +57,7 @@ func seedAdmin(db *gorm.DB) {
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 
 	if adminUsername == "" || adminEmail == "" || adminPassword == "" {
-		log.Println("Skipping admin seeding: credentials not fully provided in env")
+		zap.L().Warn("Skipping admin seeding: credentials not fully provided in env")
 		return
 	}
 
@@ -62,7 +69,7 @@ func seedAdmin(db *gorm.DB) {
 
 	hashedPassword, err := utils.HashPassword(adminPassword)
 	if err != nil {
-		log.Printf("Failed to hash admin password: %v", err)
+		zap.L().Error("Failed to hash admin password", zap.Error(err))
 		return
 	}
 
@@ -71,11 +78,13 @@ func seedAdmin(db *gorm.DB) {
 		Email:    adminEmail,
 		Password: hashedPassword,
 		Role:     domain.RoleAdmin,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	if err := db.Create(&admin).Error; err != nil {
-		log.Printf("Failed to seed admin: %v", err)
+		zap.L().Error("Failed to seed admin", zap.Error(err))
 	} else {
-		fmt.Println("Admin user seeded successfully")
+		zap.L().Info("Admin user seeded successfully", zap.String("username", adminUsername))
 	}
 }

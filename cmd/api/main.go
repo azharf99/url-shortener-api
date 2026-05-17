@@ -11,9 +11,14 @@ import (
 	"github.com/azharf99/url-shortener-api/internal/usecase"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 func main() {
+	// Initialize Logger
+	config.InitLogger()
+	defer zap.L().Sync()
+
 	db := config.ConnectDB()
 	redisClient := config.ConnectRedis()
 
@@ -29,7 +34,12 @@ func main() {
 	urlHandler := handler.NewURLHandler(urlUsecase)
 	userHandler := handler.NewUserHandler(userUsecase)
 
-	r := gin.Default()
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	r := gin.New() // Use gin.New() to avoid default logger
+	r.Use(middleware.ZapLogger(), gin.Recovery())
 
 	// Rate Limiter (using Redis if available)
 	r.Use(middleware.RateLimiter(redisClient))
@@ -80,5 +90,13 @@ func main() {
 		}
 	}
 
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	zap.L().Info("Server starting", zap.String("port", port))
+	if err := r.Run(":" + port); err != nil {
+		zap.L().Fatal("Server failed to start", zap.Error(err))
+	}
 }
