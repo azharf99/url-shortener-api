@@ -48,6 +48,44 @@ func (u *userUsecase) Login(ctx context.Context, username, password string) (str
 	return utils.GenerateToken(user.ID, user.Role)
 }
 
+func (u *userUsecase) GoogleLogin(ctx context.Context, googleID, email, name string) (string, error) {
+	user, err := u.userRepo.GetByGoogleID(ctx, googleID)
+	if err != nil {
+		return "", err
+	}
+
+	if user == nil {
+		// Try by email if user existed but hasn't linked Google
+		user, err = u.userRepo.GetByUsernameOrEmail(ctx, email)
+		if err != nil {
+			return "", err
+		}
+
+		if user == nil {
+			// Register new user
+			user = &domain.User{
+				Username: name,
+				Email:    email,
+				GoogleID: googleID,
+				Role:     domain.RoleUser,
+			}
+			err = u.userRepo.Create(ctx, user)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			// Link Google ID to existing account
+			user.GoogleID = googleID
+			err = u.userRepo.Update(ctx, user)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	return utils.GenerateToken(user.ID, user.Role)
+}
+
 func (u *userUsecase) ListUsers(ctx context.Context, search string, page, limit int) ([]domain.User, int64, error) {
 	if page < 1 {
 		page = 1

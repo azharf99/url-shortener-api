@@ -51,6 +51,18 @@ func (r *userRepository) GetByUsernameOrEmail(ctx context.Context, identifier st
 	return ToUserEntity(&model), nil
 }
 
+func (r *userRepository) GetByGoogleID(ctx context.Context, googleID string) (*domain.User, error) {
+	var model UserModel
+	err := r.db.WithContext(ctx).Where("google_id = ?", googleID).First(&model).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return ToUserEntity(&model), nil
+}
+
 func (r *userRepository) List(ctx context.Context, search string, offset, limit int) ([]domain.User, int64, error) {
 	var models []UserModel
 	var total int64

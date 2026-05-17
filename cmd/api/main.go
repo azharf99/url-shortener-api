@@ -38,28 +38,33 @@ func main() {
 
 	// Public routes
 	r.GET("/:shortCode", urlHandler.Redirect)
-	r.POST("/register", userHandler.Register)
-	r.POST("/login", userHandler.Login)
-
-	// Protected routes
-	auth := r.Group("/")
-	auth.Use(middleware.AuthMiddleware())
+	
+	api := r.Group("/api")
 	{
-		auth.POST("/shorten", urlHandler.Shorten)
-		auth.GET("/urls", urlHandler.List)
-		auth.PUT("/urls/:id", urlHandler.Update)
-		auth.DELETE("/urls/:id", urlHandler.Delete)
-	}
+		api.POST("/register", userHandler.Register)
+		api.POST("/login", userHandler.Login)
+		api.POST("/google-login", userHandler.GoogleLogin)
 
-	// Admin routes
-	admin := r.Group("/admin")
-	admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
-	{
-		admin.POST("/users", userHandler.Create)
-		admin.GET("/users", userHandler.List)
-		admin.GET("/users/:id", userHandler.GetByID)
-		admin.PUT("/users/:id", userHandler.Update)
-		admin.DELETE("/users/:id", userHandler.Delete)
+		// Protected routes
+		auth := api.Group("/")
+		auth.Use(middleware.AuthMiddleware(), middleware.CaptchaMiddleware())
+		{
+			auth.POST("/shorten", urlHandler.Shorten)
+			auth.GET("/urls", urlHandler.List)
+			auth.PUT("/urls/:id", urlHandler.Update)
+			auth.DELETE("/urls/:id", urlHandler.Delete)
+		}
+
+		// Admin routes
+		admin := api.Group("/admin")
+		admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly(), middleware.CaptchaMiddleware())
+		{
+			admin.POST("/users", userHandler.Create)
+			admin.GET("/users", userHandler.List)
+			admin.GET("/users/:id", userHandler.GetByID)
+			admin.PUT("/users/:id", userHandler.Update)
+			admin.DELETE("/users/:id", userHandler.Delete)
+		}
 	}
 
 	r.Run(":8080")

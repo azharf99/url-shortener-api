@@ -10,8 +10,9 @@ type UserModel struct {
 	ID        uint        `gorm:"primaryKey"`
 	Username  string      `gorm:"unique;not null"`
 	Email     string      `gorm:"unique;not null"`
-	Password  string      `gorm:"not null"`
+	Password  string      `gorm:"default:null"`
 	Role      domain.Role `gorm:"type:varchar(20);default:'user'"`
+	GoogleID  string      `gorm:"unique;index;default:null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -45,6 +46,7 @@ func ToUserEntity(m *UserModel) *domain.User {
 		Email:     m.Email,
 		Password:  m.Password,
 		Role:      m.Role,
+		GoogleID:  m.GoogleID,
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,
 	}
@@ -60,6 +62,7 @@ func FromUserEntity(e *domain.User) *UserModel {
 		Email:     e.Email,
 		Password:  e.Password,
 		Role:      e.Role,
+		GoogleID:  e.GoogleID,
 		CreatedAt: e.CreatedAt,
 		UpdatedAt: e.UpdatedAt,
 	}

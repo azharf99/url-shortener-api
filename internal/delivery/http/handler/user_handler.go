@@ -77,6 +77,27 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
+func (h *UserHandler) GoogleLogin(c *gin.Context) {
+	var input struct {
+		GoogleID string `json:"google_id" binding:"required"`
+		Email    string `json:"email" binding:"required,email"`
+		Name     string `json:"name" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.userUsecase.GoogleLogin(c.Request.Context(), input.GoogleID, input.Email, input.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
 func (h *UserHandler) Create(c *gin.Context) {
 	var input struct {
 		Username string      `json:"username" binding:"required"`
