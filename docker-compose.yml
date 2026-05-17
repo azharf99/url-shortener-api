@@ -1,0 +1,39 @@
+services:
+  app:
+    build: .
+    container_name: url_shortener_app
+    restart: always
+    environment:
+      - TZ=Asia/Jakarta
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - GIN_MODE=${GIN_MODE}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_SECRET_KEY=${ADMIN_SECRET_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URL=${GOOGLE_REDIRECT_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - RECAPTCHA_SECRET=${RECAPTCHA_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - shared-network
+    ports:
+      - "8081:8080"
+
+networks:
+  shared-network:
+    external: true
