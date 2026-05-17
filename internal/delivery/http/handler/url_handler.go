@@ -2,11 +2,39 @@ package handler
 
 import (
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
 	"github.com/gin-gonic/gin"
 )
+
+type URLResponse struct {
+	ID          uint      `json:"id"`
+	OriginalURL string    `json:"original_url"`
+	ShortCode   string    `json:"short_code"`
+	ShortURL    string    `json:"short_url"`
+	UserID      uint      `json:"user_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func NewURLResponse(u domain.URL) URLResponse {
+	backendURL := os.Getenv("BACKEND_URL")
+	if backendURL == "" {
+		backendURL = "http://localhost:8088/"
+	}
+	return URLResponse{
+		ID:          u.ID,
+		OriginalURL: u.OriginalURL,
+		ShortCode:   u.ShortCode,
+		ShortURL:    backendURL + u.ShortCode,
+		UserID:      u.UserID,
+		CreatedAt:   u.CreatedAt,
+		UpdatedAt:   u.UpdatedAt,
+	}
+}
 
 type URLHandler struct {
 	urlUsecase domain.URLUsecase
@@ -34,11 +62,7 @@ func (h *URLHandler) Shorten(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"original_url": url.OriginalURL,
-		"short_url":    "https://url.azharfa.cloud/" + url.ShortCode,
-		"short_code":   url.ShortCode,
-	})
+	c.JSON(http.StatusOK, NewURLResponse(*url))
 }
 
 func (h *URLHandler) Redirect(c *gin.Context) {
@@ -112,5 +136,10 @@ func (h *URLHandler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"urls": urls})
+	responses := make([]URLResponse, len(urls))
+	for i, u := range urls {
+		responses[i] = NewURLResponse(u)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"urls": responses})
 }

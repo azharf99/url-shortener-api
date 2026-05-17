@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
+	"github.com/azharf99/url-shortener-api/internal/repository"
 	"github.com/azharf99/url-shortener-api/internal/utils"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -29,13 +30,13 @@ func ConnectDB() *gorm.DB {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn), // Only log warnings and errors, ignore RecordNotFound (which is logged at Info level if IgnoreRecordNotFoundError is true)
+		Logger: logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	db.AutoMigrate(&domain.User{}, &domain.URL{})
+	db.AutoMigrate(&repository.UserModel{}, &repository.URLModel{})
 	fmt.Println("Database connected and migrated")
 
 	seedAdmin(db)
@@ -54,7 +55,7 @@ func seedAdmin(db *gorm.DB) {
 	}
 
 	var count int64
-	db.Model(&domain.User{}).Where("role = ?", domain.RoleAdmin).Count(&count)
+	db.Model(&repository.UserModel{}).Where("role = ?", domain.RoleAdmin).Count(&count)
 	if count > 0 {
 		return
 	}
@@ -65,7 +66,7 @@ func seedAdmin(db *gorm.DB) {
 		return
 	}
 
-	admin := domain.User{
+	admin := repository.UserModel{
 		Username: adminUsername,
 		Email:    adminEmail,
 		Password: hashedPassword,

@@ -6,13 +6,12 @@ import (
 )
 
 type URL struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	OriginalURL string    `json:"original_url" gorm:"not null"`
-	ShortCode   string    `json:"short_code" gorm:"unique;not null"`
-	UserID      uint      `json:"user_id" gorm:"not null"`
-	User        User      `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          uint
+	OriginalURL string
+	ShortCode   string
+	UserID      uint
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type URLRepository interface {

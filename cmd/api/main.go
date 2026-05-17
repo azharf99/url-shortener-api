@@ -51,5 +51,16 @@ func main() {
 		auth.DELETE("/urls/:id", urlHandler.Delete)
 	}
 
+	// Admin routes
+	admin := r.Group("/admin")
+	admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
+	{
+		admin.POST("/users", userHandler.Create)
+		admin.GET("/users", userHandler.GetAll)
+		admin.GET("/users/:id", userHandler.GetByID)
+		admin.PUT("/users/:id", userHandler.Update)
+		admin.DELETE("/users/:id", userHandler.Delete)
+	}
+
 	r.Run(":8080")
 }

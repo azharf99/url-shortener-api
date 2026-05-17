@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"math/rand"
-	"time"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
 )
@@ -18,10 +17,6 @@ func NewURLUsecase(urlRepo domain.URLRepository) domain.URLUsecase {
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func generateShortCode(length int) string {
 	b := make([]byte, length)
