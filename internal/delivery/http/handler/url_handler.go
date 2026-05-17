@@ -133,7 +133,11 @@ func (h *URLHandler) List(c *gin.Context) {
 	userID := c.MustGet("user_id").(uint)
 	role := c.MustGet("role").(domain.Role)
 
-	urls, err := h.urlUsecase.ListURLs(c.Request.Context(), userID, role)
+	search := c.Query("search")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	urls, total, err := h.urlUsecase.ListURLs(c.Request.Context(), userID, role, search, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not list URLs"})
 		return
@@ -144,5 +148,12 @@ func (h *URLHandler) List(c *gin.Context) {
 		responses[i] = NewURLResponse(u)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"urls": responses})
+	c.JSON(http.StatusOK, gin.H{
+		"urls": responses,
+		"meta": gin.H{
+			"total": total,
+			"page":  page,
+			"limit": limit,
+		},
+	})
 }

@@ -90,9 +90,14 @@ func (u *urlUsecase) DeleteURL(ctx context.Context, userID uint, role domain.Rol
 	return u.urlRepo.Delete(ctx, urlID)
 }
 
-func (u *urlUsecase) ListURLs(ctx context.Context, userID uint, role domain.Role) ([]domain.URL, error) {
-	if role == domain.RoleAdmin {
-		return u.urlRepo.ListAll(ctx)
+func (u *urlUsecase) ListURLs(ctx context.Context, userID uint, role domain.Role, search string, page, limit int) ([]domain.URL, int64, error) {
+	if page < 1 {
+		page = 1
 	}
-	return u.urlRepo.ListByUserID(ctx, userID)
+	if limit < 1 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	return u.urlRepo.List(ctx, userID, role, search, offset, limit)
 }

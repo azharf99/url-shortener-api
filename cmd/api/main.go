@@ -56,7 +56,7 @@ func main() {
 	admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 	{
 		admin.POST("/users", userHandler.Create)
-		admin.GET("/users", userHandler.GetAll)
+		admin.GET("/users", userHandler.List)
 		admin.GET("/users/:id", userHandler.GetByID)
 		admin.PUT("/users/:id", userHandler.Update)
 		admin.DELETE("/users/:id", userHandler.Delete)

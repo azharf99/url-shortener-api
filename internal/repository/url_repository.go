@@ -60,32 +60,36 @@ func (r *urlRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&URLModel{}, id).Error
 }
 
-func (r *urlRepository) ListByUserID(ctx context.Context, userID uint) ([]domain.URL, error) {
+func (r *urlRepository) List(ctx context.Context, userID uint, role domain.Role, search string, offset, limit int) ([]domain.URL, int64, error) {
 	var models []URLModel
-	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&models).Error
+	var total int64
+
+	db := r.db.WithContext(ctx).Model(&URLModel{})
+
+	if role != domain.RoleAdmin {
+		db = db.Where("user_id = ?", userID)
+	}
+
+	if search != "" {
+		db = db.Where("original_url ILIKE ? OR short_code ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	err := db.Count(&total).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	err = db.Offset(offset).Limit(limit).Order("created_at DESC").Find(&models).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
 	urls := make([]domain.URL, len(models))
 	for i, m := range models {
 		urls[i] = *ToURLEntity(&m)
 	}
-	return urls, nil
-}
 
-func (r *urlRepository) ListAll(ctx context.Context) ([]domain.URL, error) {
-	var models []URLModel
-	err := r.db.WithContext(ctx).Find(&models).Error
-	if err != nil {
-		return nil, err
-	}
-
-	urls := make([]domain.URL, len(models))
-	for i, m := range models {
-		urls[i] = *ToURLEntity(&m)
-	}
-	return urls, nil
+	return urls, total, nil
 }
 
 func (r *urlRepository) IncrementClick(ctx context.Context, shortCode string) error {

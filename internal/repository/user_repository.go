@@ -51,18 +51,32 @@ func (r *userRepository) GetByUsernameOrEmail(ctx context.Context, identifier st
 	return ToUserEntity(&model), nil
 }
 
-func (r *userRepository) GetAll(ctx context.Context) ([]domain.User, error) {
+func (r *userRepository) List(ctx context.Context, search string, offset, limit int) ([]domain.User, int64, error) {
 	var models []UserModel
-	err := r.db.WithContext(ctx).Find(&models).Error
+	var total int64
+
+	db := r.db.WithContext(ctx).Model(&UserModel{})
+
+	if search != "" {
+		db = db.Where("username ILIKE ? OR email ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	err := db.Count(&total).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	err = db.Offset(offset).Limit(limit).Order("created_at DESC").Find(&models).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
 	users := make([]domain.User, len(models))
 	for i, m := range models {
 		users[i] = *ToUserEntity(&m)
 	}
-	return users, nil
+
+	return users, total, nil
 }
 
 func (r *userRepository) Update(ctx context.Context, user *domain.User) error {

@@ -21,8 +21,7 @@ type URLRepository interface {
 	GetByID(ctx context.Context, id uint) (*URL, error)
 	Update(ctx context.Context, url *URL) error
 	Delete(ctx context.Context, id uint) error
-	ListByUserID(ctx context.Context, userID uint) ([]URL, error)
-	ListAll(ctx context.Context) ([]URL, error)
+	List(ctx context.Context, userID uint, role Role, search string, offset, limit int) ([]URL, int64, error)
 	IncrementClick(ctx context.Context, shortCode string) error
 }
 
@@ -31,5 +30,5 @@ type URLUsecase interface {
 	GetOriginalURL(ctx context.Context, shortCode string) (string, error)
 	UpdateURL(ctx context.Context, userID uint, role Role, urlID uint, originalURL string) error
 	DeleteURL(ctx context.Context, userID uint, role Role, urlID uint) error
-	ListURLs(ctx context.Context, userID uint, role Role) ([]URL, error)
+	ListURLs(ctx context.Context, userID uint, role Role, search string, page, limit int) ([]URL, int64, error)
 }

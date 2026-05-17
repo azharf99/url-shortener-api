@@ -48,8 +48,16 @@ func (u *userUsecase) Login(ctx context.Context, username, password string) (str
 	return utils.GenerateToken(user.ID, user.Role)
 }
 
-func (u *userUsecase) GetAllUsers(ctx context.Context) ([]domain.User, error) {
-	return u.userRepo.GetAll(ctx)
+func (u *userUsecase) ListUsers(ctx context.Context, search string, page, limit int) ([]domain.User, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	return u.userRepo.List(ctx, search, offset, limit)
 }
 
 func (u *userUsecase) GetUserByID(ctx context.Context, id uint) (*domain.User, error) {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
@@ -97,8 +98,12 @@ func (h *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully by admin"})
 }
 
-func (h *UserHandler) GetAll(c *gin.Context) {
-	users, err := h.userUsecase.GetAllUsers(c.Request.Context())
+func (h *UserHandler) List(c *gin.Context) {
+	search := c.Query("search")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	users, total, err := h.userUsecase.ListUsers(c.Request.Context(), search, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch users"})
 		return
@@ -109,7 +114,14 @@ func (h *UserHandler) GetAll(c *gin.Context) {
 		responses[i] = NewUserResponse(u)
 	}
 
-	c.JSON(http.StatusOK, responses)
+	c.JSON(http.StatusOK, gin.H{
+		"users": responses,
+		"meta": gin.H{
+			"total": total,
+			"page":  page,
+			"limit": limit,
+		},
+	})
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {
