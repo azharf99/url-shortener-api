@@ -10,22 +10,26 @@ import (
 )
 
 type UserResponse struct {
-	ID        uint        `json:"id"`
-	Username  string      `json:"username"`
-	Email     string      `json:"email"`
-	Role      domain.Role `json:"role"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID              uint        `json:"id"`
+	Username        string      `json:"username"`
+	Email           string      `json:"email"`
+	Role            domain.Role `json:"role"`
+	IsPremium       bool        `json:"is_premium"`
+	SubscriptionEnd time.Time   `json:"subscription_end"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       time.Time   `json:"updated_at"`
 }
 
 func NewUserResponse(u domain.User) UserResponse {
 	return UserResponse{
-		ID:        u.ID,
-		Username:  u.Username,
-		Email:     u.Email,
-		Role:      u.Role,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:              u.ID,
+		Username:        u.Username,
+		Email:           u.Email,
+		Role:            u.Role,
+		IsPremium:       u.IsPremium,
+		SubscriptionEnd: u.SubscriptionEnd,
+		CreatedAt:       u.CreatedAt,
+		UpdatedAt:       u.UpdatedAt,
 	}
 }
 
@@ -35,6 +39,21 @@ type UserHandler struct {
 
 func NewUserHandler(u domain.UserUsecase) *UserHandler {
 	return &UserHandler{u}
+}
+
+func (h *UserHandler) Me(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+	user, err := h.userUsecase.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch user profile"})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, NewUserResponse(*user))
 }
 
 func (h *UserHandler) Register(c *gin.Context) {

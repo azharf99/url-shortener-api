@@ -51,7 +51,8 @@ func (h *URLHandler) Shorten(c *gin.Context) {
 	userID := c.MustGet("user_id").(uint)
 
 	var input struct {
-		OriginalURL string `json:"original_url" binding:"required,url"`
+		OriginalURL     string `json:"original_url" binding:"required,url"`
+		CustomShortCode string `json:"custom_short_code" binding:"omitempty,max=20"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -59,9 +60,9 @@ func (h *URLHandler) Shorten(c *gin.Context) {
 		return
 	}
 
-	url, err := h.urlUsecase.Shorten(c.Request.Context(), userID, input.OriginalURL)
+	url, err := h.urlUsecase.Shorten(c.Request.Context(), userID, input.OriginalURL, input.CustomShortCode)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create short URL"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

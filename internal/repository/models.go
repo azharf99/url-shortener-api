@@ -7,14 +7,16 @@ import (
 )
 
 type UserModel struct {
-	ID        uint        `gorm:"primaryKey"`
-	Username  string      `gorm:"unique;not null"`
-	Email     string      `gorm:"unique;not null"`
-	Password  string      `gorm:"default:null"`
-	Role      domain.Role `gorm:"type:varchar(20);default:'user'"`
-	GoogleID  string      `gorm:"unique;index;default:null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID              uint        `gorm:"primaryKey"`
+	Username        string      `gorm:"unique;not null"`
+	Email           string      `gorm:"unique;not null"`
+	Password        string      `gorm:"default:null"`
+	Role            domain.Role `gorm:"type:varchar(20);default:'user'"`
+	GoogleID        string      `gorm:"unique;index;default:null"`
+	IsPremium       bool        `gorm:"default:false"`
+	SubscriptionEnd time.Time   `gorm:"default:null"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func (UserModel) TableName() string {
@@ -41,14 +43,16 @@ func ToUserEntity(m *UserModel) *domain.User {
 		return nil
 	}
 	return &domain.User{
-		ID:        m.ID,
-		Username:  m.Username,
-		Email:     m.Email,
-		Password:  m.Password,
-		Role:      m.Role,
-		GoogleID:  m.GoogleID,
-		CreatedAt: m.CreatedAt,
-		UpdatedAt: m.UpdatedAt,
+		ID:              m.ID,
+		Username:        m.Username,
+		Email:           m.Email,
+		Password:        m.Password,
+		Role:            m.Role,
+		GoogleID:        m.GoogleID,
+		IsPremium:       m.IsPremium,
+		SubscriptionEnd: m.SubscriptionEnd,
+		CreatedAt:       m.CreatedAt,
+		UpdatedAt:       m.UpdatedAt,
 	}
 }
 
@@ -57,14 +61,16 @@ func FromUserEntity(e *domain.User) *UserModel {
 		return nil
 	}
 	return &UserModel{
-		ID:        e.ID,
-		Username:  e.Username,
-		Email:     e.Email,
-		Password:  e.Password,
-		Role:      e.Role,
-		GoogleID:  e.GoogleID,
-		CreatedAt: e.CreatedAt,
-		UpdatedAt: e.UpdatedAt,
+		ID:              e.ID,
+		Username:        e.Username,
+		Email:           e.Email,
+		Password:        e.Password,
+		Role:            e.Role,
+		GoogleID:        e.GoogleID,
+		IsPremium:       e.IsPremium,
+		SubscriptionEnd: e.SubscriptionEnd,
+		CreatedAt:       e.CreatedAt,
+		UpdatedAt:       e.UpdatedAt,
 	}
 }
 

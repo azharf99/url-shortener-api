@@ -26,7 +26,7 @@ type URLRepository interface {
 }
 
 type URLUsecase interface {
-	Shorten(ctx context.Context, userID uint, originalURL string) (*URL, error)
+	Shorten(ctx context.Context, userID uint, originalURL string, customShortCode string) (*URL, error)
 	GetOriginalURL(ctx context.Context, shortCode string) (string, error)
 	UpdateURL(ctx context.Context, userID uint, role Role, urlID uint, originalURL string) error
 	DeleteURL(ctx context.Context, userID uint, role Role, urlID uint) error

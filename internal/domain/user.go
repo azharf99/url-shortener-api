@@ -13,14 +13,16 @@ const (
 )
 
 type User struct {
-	ID        uint
-	Username  string
-	Email     string
-	Password  string
-	Role      Role
-	GoogleID  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID              uint
+	Username        string
+	Email           string
+	Password        string
+	Role            Role
+	GoogleID        string
+	IsPremium       bool
+	SubscriptionEnd time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type UserRepository interface {

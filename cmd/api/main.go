@@ -27,12 +27,13 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 
 	// Usecases
-	urlUsecase := usecase.NewURLUsecase(urlRepo)
+	urlUsecase := usecase.NewURLUsecase(urlRepo, userRepo)
 	userUsecase := usecase.NewUserUsecase(userRepo)
 
 	// Handlers
 	urlHandler := handler.NewURLHandler(urlUsecase)
 	userHandler := handler.NewUserHandler(userUsecase)
+	subscriptionHandler := handler.NewSubscriptionHandler(userRepo)
 
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -67,6 +68,7 @@ func main() {
 		api.POST("/register", middleware.CaptchaMiddleware(), userHandler.Register)
 		api.POST("/login", middleware.CaptchaMiddleware(), userHandler.Login)
 		api.POST("/google-login", middleware.CaptchaMiddleware(), userHandler.GoogleLogin)
+		api.POST("/webhook/payment", subscriptionHandler.HandlePaymentWebhook)
 
 		// Protected routes (JWT only for READ, Captcha for WRITE)
 		auth := api.Group("/")
@@ -76,6 +78,8 @@ func main() {
 			auth.GET("/urls", urlHandler.List)
 			auth.PUT("/urls/:id", middleware.CaptchaMiddleware(), urlHandler.Update)
 			auth.DELETE("/urls/:id", middleware.CaptchaMiddleware(), urlHandler.Delete)
+			auth.POST("/subscription/checkout", subscriptionHandler.Checkout)
+			auth.GET("/me", userHandler.Me)
 		}
 
 		// Admin routes (Admin + JWT for READ, + Captcha for WRITE)

@@ -4,16 +4,18 @@ import (
 	"context"
 	"errors"
 	"math/rand"
+	"time"
 
 	"github.com/azharf99/url-shortener-api/internal/domain"
 )
 
 type urlUsecase struct {
-	urlRepo domain.URLRepository
+	urlRepo  domain.URLRepository
+	userRepo domain.UserRepository
 }
 
-func NewURLUsecase(urlRepo domain.URLRepository) domain.URLUsecase {
-	return &urlUsecase{urlRepo}
+func NewURLUsecase(urlRepo domain.URLRepository, userRepo domain.UserRepository) domain.URLUsecase {
+	return &urlUsecase{urlRepo, userRepo}
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -26,8 +28,40 @@ func generateShortCode(length int) string {
 	return string(b)
 }
 
-func (u *urlUsecase) Shorten(ctx context.Context, userID uint, originalURL string) (*domain.URL, error) {
-	shortCode := generateShortCode(6)
+func (u *urlUsecase) Shorten(ctx context.Context, userID uint, originalURL string, customShortCode string) (*domain.URL, error) {
+	var shortCode string
+
+	if customShortCode != "" {
+		// Fetch user to verify premium status
+		user, err := u.userRepo.GetByID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		if user == nil {
+			return nil, errors.New("user not found")
+		}
+
+		isPremium := user.IsPremium && user.SubscriptionEnd.After(time.Now())
+		if !isPremium {
+			return nil, errors.New("custom shortcode is only available for premium subscribers")
+		}
+
+		if len(customShortCode) > 20 {
+			return nil, errors.New("custom shortcode exceeds maximum length of 20 characters")
+		}
+		
+		existing, err := u.urlRepo.GetByShortCode(ctx, customShortCode)
+		if err != nil {
+			return nil, err
+		}
+		if existing != nil {
+			return nil, errors.New("custom shortcode already exists")
+		}
+		shortCode = customShortCode
+	} else {
+		shortCode = generateShortCode(6)
+	}
+
 	url := &domain.URL{
 		OriginalURL: originalURL,
 		ShortCode:   shortCode,
