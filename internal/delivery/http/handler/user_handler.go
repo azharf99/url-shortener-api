@@ -247,3 +247,53 @@ func (h *UserHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
+
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+
+	var input struct {
+		Username string `json:"username" binding:"required"`
+		Phone    string `json:"phone"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.userUsecase.UpdateProfile(c.Request.Context(), userID, input.Username, input.Phone); err != nil {
+		if err.Error() == "username already taken" {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
+}
+
+func (h *UserHandler) UpdatePassword(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+
+	var input struct {
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password" binding:"required,min=6"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.userUsecase.UpdatePassword(c.Request.Context(), userID, input.OldPassword, input.NewPassword); err != nil {
+		if err.Error() == "incorrect old password" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}

@@ -188,3 +188,49 @@ func (u *userUsecase) AdminCreateUser(ctx context.Context, username, email, pass
 
 	return u.userRepo.Create(ctx, user)
 }
+
+func (u *userUsecase) UpdateProfile(ctx context.Context, id uint, username, phone string) error {
+	user, err := u.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+
+	if username != user.Username {
+		existing, _ := u.userRepo.GetByUsername(ctx, username)
+		if existing != nil {
+			return errors.New("username already taken")
+		}
+	}
+
+	user.Username = username
+	user.Phone = phone
+
+	return u.userRepo.Update(ctx, user)
+}
+
+func (u *userUsecase) UpdatePassword(ctx context.Context, id uint, oldPassword, newPassword string) error {
+	user, err := u.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+
+	if user.Password != "" {
+		if !utils.CheckPasswordHash(oldPassword, user.Password) {
+			return errors.New("incorrect old password")
+		}
+	}
+
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	user.Password = hashedPassword
+	return u.userRepo.Update(ctx, user)
+}

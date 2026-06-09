@@ -47,4 +47,6 @@ type UserUsecase interface {
 	UpdateUser(ctx context.Context, id uint, username, email, phone string, role Role) error
 	DeleteUser(ctx context.Context, id uint) error
 	AdminCreateUser(ctx context.Context, username, email, password, phone string, role Role) error
+	UpdateProfile(ctx context.Context, id uint, username, phone string) error
+	UpdatePassword(ctx context.Context, id uint, oldPassword, newPassword string) error
 }

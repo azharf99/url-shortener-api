@@ -211,3 +211,99 @@ func (h *SubscriptionHandler) createRecurringSubscription(userID uint, savedToke
 		resp.Body.Close()
 	}
 }
+
+func (h *SubscriptionHandler) CancelSubscription(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+
+	pgURL := os.Getenv("PAYMENT_GATEWAY_URL")
+	pgAPIKey := os.Getenv("PAYMENT_GATEWAY_API_KEY")
+	if pgURL == "" || pgAPIKey == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment gateway configuration is missing on server"})
+		return
+	}
+
+	cancelPayload := map[string]interface{}{
+		"user_id": userID,
+	}
+	payloadBytes, _ := json.Marshal(cancelPayload)
+
+	req, err := http.NewRequest("POST", pgURL+"/api/v1/subscriptions/cancel", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to construct request to payment gateway"})
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-API-Key", pgAPIKey)
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reach payment gateway: " + err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		var pgErr struct {
+			Error string `json:"error"`
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&pgErr)
+		c.JSON(resp.StatusCode, gin.H{"error": "Payment gateway error: " + pgErr.Error})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Subscription canceled successfully",
+	})
+}
+
+func (h *SubscriptionHandler) GetSubscriptionStatus(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+
+	user, err := h.userRepo.GetByID(c.Request.Context(), userID)
+	if err != nil || user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	statusResp := gin.H{
+		"is_premium":       user.IsPremium,
+		"subscription_end": user.SubscriptionEnd,
+		"is_recurring":     false,
+	}
+
+	pgURL := os.Getenv("PAYMENT_GATEWAY_URL")
+	pgAPIKey := os.Getenv("PAYMENT_GATEWAY_API_KEY")
+	if pgURL == "" || pgAPIKey == "" {
+		c.JSON(http.StatusOK, statusResp)
+		return
+	}
+
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/subscriptions/active?user_id=%d", pgURL, userID), nil)
+	if err != nil {
+		c.JSON(http.StatusOK, statusResp)
+		return
+	}
+	req.Header.Set("X-API-Key", pgAPIKey)
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(http.StatusOK, statusResp)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var sub struct {
+			ID     string `json:"id"`
+			Status string `json:"status"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&sub); err == nil && sub.Status == "active" {
+			statusResp["is_recurring"] = true
+			statusResp["subscription_id"] = sub.ID
+		}
+	}
+
+	c.JSON(http.StatusOK, statusResp)
+}

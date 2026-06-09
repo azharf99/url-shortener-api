@@ -79,7 +79,11 @@ func main() {
 			auth.PUT("/urls/:id", middleware.CaptchaMiddleware(), urlHandler.Update)
 			auth.DELETE("/urls/:id", middleware.CaptchaMiddleware(), urlHandler.Delete)
 			auth.POST("/subscription/checkout", subscriptionHandler.Checkout)
+			auth.GET("/subscription/status", subscriptionHandler.GetSubscriptionStatus)
+			auth.POST("/subscription/cancel", middleware.CaptchaMiddleware(), subscriptionHandler.CancelSubscription)
 			auth.GET("/me", userHandler.Me)
+			auth.PUT("/me", middleware.CaptchaMiddleware(), userHandler.UpdateProfile)
+			auth.PUT("/me/password", middleware.CaptchaMiddleware(), userHandler.UpdatePassword)
 		}
 
 		// Admin routes (Admin + JWT for READ, + Captcha for WRITE)
