@@ -17,6 +17,7 @@ type User struct {
 	Username        string
 	Email           string
 	Password        string
+	Phone           string
 	Role            Role
 	GoogleID        string
 	IsPremium       bool
@@ -38,12 +39,12 @@ type UserRepository interface {
 }
 
 type UserUsecase interface {
-	Register(ctx context.Context, username, email, password string) error
+	Register(ctx context.Context, username, email, password, phone string) error
 	Login(ctx context.Context, username, password string) (string, error)
 	GoogleLogin(ctx context.Context, googleID, email, name string) (string, error)
 	ListUsers(ctx context.Context, search string, page, limit int) ([]User, int64, error)
 	GetUserByID(ctx context.Context, id uint) (*User, error)
-	UpdateUser(ctx context.Context, id uint, username, email string, role Role) error
+	UpdateUser(ctx context.Context, id uint, username, email, phone string, role Role) error
 	DeleteUser(ctx context.Context, id uint) error
-	AdminCreateUser(ctx context.Context, username, email, password string, role Role) error
+	AdminCreateUser(ctx context.Context, username, email, password, phone string, role Role) error
 }

@@ -16,7 +16,7 @@ func NewUserUsecase(userRepo domain.UserRepository) domain.UserUsecase {
 	return &userUsecase{userRepo}
 }
 
-func (u *userUsecase) Register(ctx context.Context, username, email, password string) error {
+func (u *userUsecase) Register(ctx context.Context, username, email, password, phone string) error {
 	existingUser, err := u.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return err
@@ -42,6 +42,7 @@ func (u *userUsecase) Register(ctx context.Context, username, email, password st
 		Username: username,
 		Email:    email,
 		Password: hashedPassword,
+		Phone:    phone,
 		Role:     domain.RoleUser,
 	}
 
@@ -118,7 +119,7 @@ func (u *userUsecase) GetUserByID(ctx context.Context, id uint) (*domain.User, e
 	return u.userRepo.GetByID(ctx, id)
 }
 
-func (u *userUsecase) UpdateUser(ctx context.Context, id uint, username, email string, role domain.Role) error {
+func (u *userUsecase) UpdateUser(ctx context.Context, id uint, username, email, phone string, role domain.Role) error {
 	user, err := u.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -145,6 +146,7 @@ func (u *userUsecase) UpdateUser(ctx context.Context, id uint, username, email s
 
 	user.Username = username
 	user.Email = email
+	user.Phone = phone
 	user.Role = role
 
 	return u.userRepo.Update(ctx, user)
@@ -154,7 +156,7 @@ func (u *userUsecase) DeleteUser(ctx context.Context, id uint) error {
 	return u.userRepo.Delete(ctx, id)
 }
 
-func (u *userUsecase) AdminCreateUser(ctx context.Context, username, email, password string, role domain.Role) error {
+func (u *userUsecase) AdminCreateUser(ctx context.Context, username, email, password, phone string, role domain.Role) error {
 	existingUser, err := u.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return err
@@ -180,6 +182,7 @@ func (u *userUsecase) AdminCreateUser(ctx context.Context, username, email, pass
 		Username: username,
 		Email:    email,
 		Password: hashedPassword,
+		Phone:    phone,
 		Role:     role,
 	}
 

@@ -11,6 +11,7 @@ type UserModel struct {
 	Username        string      `gorm:"unique;not null"`
 	Email           string      `gorm:"unique;not null"`
 	Password        string      `gorm:"default:null"`
+	Phone           string      `gorm:"default:null"`
 	Role            domain.Role `gorm:"type:varchar(20);default:'user'"`
 	GoogleID        string      `gorm:"unique;index;default:null"`
 	IsPremium       bool        `gorm:"default:false"`
@@ -47,6 +48,7 @@ func ToUserEntity(m *UserModel) *domain.User {
 		Username:        m.Username,
 		Email:           m.Email,
 		Password:        m.Password,
+		Phone:           m.Phone,
 		Role:            m.Role,
 		GoogleID:        m.GoogleID,
 		IsPremium:       m.IsPremium,
@@ -65,6 +67,7 @@ func FromUserEntity(e *domain.User) *UserModel {
 		Username:        e.Username,
 		Email:           e.Email,
 		Password:        e.Password,
+		Phone:           e.Phone,
 		Role:            e.Role,
 		GoogleID:        e.GoogleID,
 		IsPremium:       e.IsPremium,

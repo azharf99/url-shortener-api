@@ -13,6 +13,7 @@ type UserResponse struct {
 	ID              uint        `json:"id"`
 	Username        string      `json:"username"`
 	Email           string      `json:"email"`
+	Phone           string      `json:"phone"`
 	Role            domain.Role `json:"role"`
 	IsPremium       bool        `json:"is_premium"`
 	SubscriptionEnd time.Time   `json:"subscription_end"`
@@ -25,6 +26,7 @@ func NewUserResponse(u domain.User) UserResponse {
 		ID:              u.ID,
 		Username:        u.Username,
 		Email:           u.Email,
+		Phone:           u.Phone,
 		Role:            u.Role,
 		IsPremium:       u.IsPremium,
 		SubscriptionEnd: u.SubscriptionEnd,
@@ -61,6 +63,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		Username string `json:"username" binding:"required"`
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required,min=6"`
+		Phone    string `json:"phone"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -68,7 +71,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUsecase.Register(c.Request.Context(), input.Username, input.Email, input.Password); err != nil {
+	if err := h.userUsecase.Register(c.Request.Context(), input.Username, input.Email, input.Password, input.Phone); err != nil {
 		if err.Error() == "username already taken" || err.Error() == "email already registered" {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
@@ -127,6 +130,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 		Email    string      `json:"email" binding:"required,email"`
 		Password string      `json:"password" binding:"required,min=6"`
 		Role     domain.Role `json:"role" binding:"required,oneof=admin user"`
+		Phone    string      `json:"phone"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -134,7 +138,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUsecase.AdminCreateUser(c.Request.Context(), input.Username, input.Email, input.Password, input.Role); err != nil {
+	if err := h.userUsecase.AdminCreateUser(c.Request.Context(), input.Username, input.Email, input.Password, input.Phone, input.Role); err != nil {
 		if err.Error() == "username already taken" || err.Error() == "email already registered" {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
@@ -208,13 +212,14 @@ func (h *UserHandler) Update(c *gin.Context) {
 		Username string      `json:"username" binding:"required"`
 		Email    string      `json:"email" binding:"required,email"`
 		Role     domain.Role `json:"role" binding:"required,oneof=admin user"`
+		Phone    string      `json:"phone"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.userUsecase.UpdateUser(c.Request.Context(), params.ID, input.Username, input.Email, input.Role); err != nil {
+	if err := h.userUsecase.UpdateUser(c.Request.Context(), params.ID, input.Username, input.Email, input.Phone, input.Role); err != nil {
 		if err.Error() == "username already taken" || err.Error() == "email already registered" {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return

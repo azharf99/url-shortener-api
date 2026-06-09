@@ -52,6 +52,18 @@ func (h *SubscriptionHandler) Checkout(c *gin.Context) {
 		"customer_details": map[string]interface{}{
 			"first_name": user.Username,
 			"email":      user.Email,
+			"phone":      user.Phone,
+		},
+		"item_details": []map[string]interface{}{
+			{
+				"id":            "PREMIUM-SUB",
+				"price":         100000,
+				"quantity":      1,
+				"name":          "Premium Subscription Monthly",
+				"brand":         "ShortenIt",
+				"category":      "Software Services",
+				"merchant_name": "ShortenIt",
+			},
 		},
 		"credit_card": map[string]interface{}{
 			"save_card": true,
@@ -141,7 +153,8 @@ func (h *SubscriptionHandler) HandlePaymentWebhook(c *gin.Context) {
 
 	// Process payment status
 	status := notif.TransactionStatus
-	if status == "settlement" || status == "capture" {
+	switch status {
+	case "settlement", "capture":
 		user.IsPremium = true
 		// Grant 30 days subscription from now, or extend if currently active
 		if user.SubscriptionEnd.After(time.Now()) {
@@ -159,7 +172,7 @@ func (h *SubscriptionHandler) HandlePaymentWebhook(c *gin.Context) {
 		if notif.SavedTokenID != "" && notif.SubscriptionID == "" {
 			h.createRecurringSubscription(user.ID, notif.SavedTokenID)
 		}
-	} else if status == "deny" || status == "expire" || status == "cancel" {
+	case "deny", "expire", "cancel":
 		// If recurring payment failed, set IsPremium = false
 		if notif.SubscriptionID != "" {
 			user.IsPremium = false
